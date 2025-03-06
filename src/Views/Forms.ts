@@ -523,14 +523,14 @@ console.log('localRoles', localRoles);
     actions: [
       {
         roles: [UserRoles.ADMIN],
-        lable: "Update",
+        lable: "Update Status",
         class: "btn zbtn",
         action: async (token: string, fields: IField[]) => {
           let new_user: any = {};
           let Id!: string;
 
           fields.forEach((fld) => {
-            if (["name", "title","author","isbn",  "published_date", "number_of_copy"].includes(fld.id)) {
+            if (["id","status"].includes(fld.id)) {
               new_user[fld.id] = fld.value;
             }
             console.log('fld', fld);
@@ -538,18 +538,20 @@ console.log('localRoles', localRoles);
               Id = fld.value;
             }
           });
-          new_user.published_date = Utils.convertISOToDate( new_user.published_date)
-          console.log('new_user', new_user);
-          let admin_result = await AdminAPI.update(
-            token,
-            `library_management.api.update_book`,
-            {...new_user,
-              book_id: Id,
-              name:undefined
-            }
-            
-          );
-          console.log('admin_result', admin_result);
+          if (Id) {
+            new_user.id = Id;
+           
+          }
+          const data = {
+            tableName: "ticket",
+            data: new_user,
+          };
+        let admin_result = await AdminAPI.update(
+          token,
+          `crud/update`,
+          data
+          
+        );
           return admin_result.message;
         },
       },
@@ -736,6 +738,7 @@ console.log('localRoles', localRoles);
           title: (data: any) => ({
             value: data.title,
             required: false,
+            readonly: true
           }),
           userId: (data: any) => ({
             value: data.userId,
@@ -744,10 +747,13 @@ console.log('localRoles', localRoles);
               label: dt.name,
             })),
             required: false,
+            readonly: true
+
           }),
           description: (data: any) => ({
             value: data.description,
             required: false,
+            readonly: true
           }),
        
           status: (data: any) => ({

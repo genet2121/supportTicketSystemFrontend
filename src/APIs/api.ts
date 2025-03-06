@@ -3,7 +3,7 @@ import axios, { AxiosInstance } from "axios";
 export const props: any = {
    
     
-    baseURL: "http://localhost:3005/api/",
+    baseURL: "http://168.119.175.142:3006/api/",
     
     
     // crossdomain: true,

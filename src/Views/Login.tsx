@@ -56,9 +56,13 @@ function LoginPage() {
             }
 
             navigate("/");
+            window.location.reload();
             // navigate(is_default_password ? "/default-password" : "/");
             setLoggedIn(true);
             setWaiting(false);
+            // setTimeout(() => {
+                
+            // }, 500);
         } catch (error: any) {
             setWaiting(false);
             setAlert(error.message, "error");

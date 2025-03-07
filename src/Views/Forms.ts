@@ -1132,7 +1132,7 @@ console.log('localRoles', localRoles);
           let Id!: string;
 
           fields.forEach((fld) => {
-            if (["name", "member","book","loan_date",  "return_date"].includes(fld.id)) {
+            if (["id", "ticketId",  "userId",  "message", "createdAt"].includes(fld.id)) {
               new_user[fld.id] = fld.value;
             }
             console.log('fld', fld);
@@ -1140,63 +1140,30 @@ console.log('localRoles', localRoles);
               Id = fld.value;
             }
           });
-          new_user.return_date = Utils.convertISOToDate( new_user.return_date)
-          new_user.loan_date = Utils.convertISOToDate( new_user.loan_date)
+          if (Id) {
+            new_user.id = Id;
+           
+          }
+          // new_user.adminId = undefined;
+          new_user.userId = undefined;
+          new_user.createdAt = undefined
+          const data = {
+            tableName: "response",
+            data: new_user,
+          };
+        let admin_result = await AdminAPI.update(
+          token,
+          `crud/update`,
+          data
+          
+        );
          
-          console.log('new_user', new_user);
-          let admin_result = await AdminAPI.update(
-            token,
-            `library_management.api.update_loan`,
-            {...new_user,
-              loan_id: Id,
-              name:undefined,
-              book:undefined,
-              member:undefined,
-              loan_date:undefined
-            }
-            
-          );
+          
           console.log('admin_result', admin_result);
           return admin_result.message;
         },
       },
-      {
-        roles: [UserRoles.ADMIN],
-        lable: "Returned",
-        class: "btn-secondary shadow-sm",
-        action: async (token: string, fields: IField[]) => {
-          let new_user: any = {};
-          let Id!: string;
-
-          fields.forEach((fld) => {
-            if (["name" ].includes(fld.id)) {
-              new_user[fld.id] = fld.value;
-            }
-            console.log('fld', fld);
-            if (fld.id === "name") {
-              Id = fld.value;
-            }
-          });
-        //   {
-        //     "book": "gcssudeqq7",
-        //     "is_available": 1
-        // }
-                    
-         
-          console.log('new_user', new_user);
-          let admin_result = await AdminAPI.createNew(
-            token,
-            `library_management.api.return_book`,
-            {
-              loan_id: Id,
-             
-            }
-            
-          );
-          console.log('admin_result', admin_result);
-          return admin_result.message;
-        },
-      },
+    
     ],
     relatedList: [],
     fields: [
@@ -1231,36 +1198,74 @@ console.log('localRoles', localRoles);
         required: true,
         visible: true,
         references: "tbl_ticket",
-        // options?: { value: string, label: string }[];
+        
         onchange: async (
           token: string,
           fields: IField[],
           value: any,
-          set_field: (index: number, value: IField) => void
+          set_field: (index: number, value: IField) => void,
+          localData
         ): Promise<any> => {
+          let user_name_field ;
+          let selected_ticket = localData.tickets.find(
+            (cmp: any) => cmp.id == value.value
+          );
+
+          let name_index = fields.findIndex(
+            (item) => item.id == "userId"
+          );
+
+         
+
+          if (!selected_ticket) {
+
+            if (name_index > -1) {
+              user_name_field = fields[name_index];
+              user_name_field.value = "";
+              user_name_field.readonly = false;
+  
+              set_field(name_index, user_name_field);
+            }
+
+           
+
+            return value;
+          }
+
+          if (name_index > -1) {
+            user_name_field = fields[name_index];
+            user_name_field.value = selected_ticket.userId;
+            user_name_field.readonly = true;
+
+            set_field(name_index, user_name_field);
+          }
+
+          
+         
+
           return value;
         },
       },
-      {
-        id: "adminId",
-        label: "Responser Name",
-        type: FieldTypes.REFERENCE,
-        description: "enter responser name",
-        value: "",
-        order: 10,
-        required: false,
-        visible: true,
-        references: "tbl_user",
-        // options?: { value: string, label: string }[];
-        onchange: async (
-          token: string,
-          fields: IField[],
-          value: any,
-          set_field: (index: number, value: IField) => void
-        ): Promise<any> => {
-          return value;
-        },
-      },
+      // {
+      //   id: "adminId",
+      //   label: "Responser Name",
+      //   type: FieldTypes.REFERENCE,
+      //   description: "enter responser name",
+      //   value: "",
+      //   order: 10,
+      //   required: false,
+      //   visible: true,
+      //   references: "tbl_user",
+      //   // options?: { value: string, label: string }[];
+      //   onchange: async (
+      //     token: string,
+      //     fields: IField[],
+      //     value: any,
+      //     set_field: (index: number, value: IField) => void
+      //   ): Promise<any> => {
+      //     return value;
+      //   },
+      // },
       {
         id: "userId",
         label: "Ticket Creator Name",
@@ -1363,14 +1368,14 @@ console.log('localRoles', localRoles);
               label: dt.title,
             })),
           }),
-          adminId: (data: any) => ({
-            value: "",
-            readonly: true,
-            options: localData.users.map((dt: any) => ({
-              value: dt.id,
-              label: dt.name,
-            })),
-          }),
+          // adminId: (data: any) => ({
+          //   value: "",
+          //   readonly: true,
+          //   options: localData.users.map((dt: any) => ({
+          //     value: dt.id,
+          //     label: dt.name,
+          //   })),
+          // }),
           userId: (data: any) => ({
             value: "",
             readonly: false,
@@ -1412,14 +1417,15 @@ console.log('localRoles', localRoles);
               label: dt.title,
             })),
           }),
-          adminId: (data: any) => ({
-            value: data.adminId,
-            required: false,
-            options: localData.users.map((dt: any) => ({
-              value: dt.id,
-              label: dt.name,
-            })),
-          }),
+          // adminId: (data: any) => ({
+          //   value: data.adminId,
+          //   required: false,
+          //   options: localData.users.map((dt: any) => ({
+          //     value: dt.id,
+          //     label: dt.name,
+          //   })),
+          //   readonly: true,
+          // }),
           userId: (data: any) => ({
             value: data.userId,
             required: false,
@@ -1427,6 +1433,7 @@ console.log('localRoles', localRoles);
               value: dt.id,
               label: dt.name,
             })),
+            readonly: true,
           }),
           message: (data: any) => ({
             value: data.message,
@@ -1434,8 +1441,9 @@ console.log('localRoles', localRoles);
             
           }),
           createdAt: (data: any) => ({
-            value: data.createdAt,
+            value: Utils.convertISOToDate(data.createdAt),
             required: false,
+            readonly: true,
           }),
 
          
@@ -1468,7 +1476,7 @@ console.log('localRoles', localRoles);
         
         ...rec,
         ticketId: localData.tickets.find((mbs: any) => (mbs.id == rec.ticketId)).title,
-        adminId: localData.users.find((mbs: any) => (mbs.id == rec.adminId)).name,
+        // adminId: localData.users.find((mbs: any) => (mbs.id == rec.adminId)).name,
         userId: localData.users.find((mbs: any) => (mbs.id == rec.userId)).name,
       }));
       

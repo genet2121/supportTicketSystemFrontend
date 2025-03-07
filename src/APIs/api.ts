@@ -4,6 +4,7 @@ export const props: any = {
    
     
     baseURL: "http://168.119.175.142:3006/api/",
+    // baseURL: "http://loaclhost:3005/api/",
     
     
     // crossdomain: true,
